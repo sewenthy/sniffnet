@@ -6,6 +6,7 @@ use maxminddb::{geoip2, MaxMindDBError, Reader};
 
 pub const COUNTRY_MMDB: &[u8] = include_bytes!("../../resources/DB/GeoLite2-Country.mmdb");
 
+#[allow(dead_code)]
 pub fn get_country_code(
     traffic_type: TrafficType,
     key: &AddressPortPair,

@@ -2,14 +2,14 @@ use std::sync::{Arc, Mutex};
 
 use chrono::Local;
 use etherparse::{IpHeader, TransportHeader};
-use maxminddb::Reader;
+use maxminddb::{geoip2, Reader};
 use pcap::{Active, Capture, Device};
 
 use crate::enums::app_protocol::from_port_to_application_protocol;
 use crate::enums::traffic_type::TrafficType;
 use crate::structs::address_port_pair::AddressPortPair;
 use crate::structs::info_address_port_pair::InfoAddressPortPair;
-use crate::utility::countries::get_country_code;
+
 use crate::{AppProtocol, InfoTraffic, IpVersion, TransProtocol};
 
 /// This function analyzes the network layer header passed as parameter and updates variables
@@ -102,7 +102,22 @@ pub fn modify_or_insert_in_map(
     let index = info_traffic.map.get_index_of(&key).unwrap_or(len);
     let country = if index == len {
         // first occurrence of key => retrieve country code
-        get_country_code(traffic_type, &key, country_db_reader)
+        let address_to_lookup = match traffic_type {
+            TrafficType::Outgoing => &key.address2,
+            _ => &key.address1,
+        };
+
+        let country_result: Result<geoip2::Country, maxminddb::MaxMindDBError> =
+            country_db_reader.lookup(address_to_lookup.parse().unwrap());
+        let mut result = String::new();
+        if let Ok(res1) = country_result {
+            if let Some(res2) = res1.country {
+                if let Some(res3) = res2.iso_code {
+                    result = res3.to_string().replace("ZZ", "//");
+                }
+            }
+        }
+        result
     } else {
         // this key already occurred
         String::new()
