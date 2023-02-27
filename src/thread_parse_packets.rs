@@ -125,49 +125,7 @@ pub fn parse_packets_loop(
                         {
                             // if (port1 >= lowest_port && port1 <= highest_port)
                             //     || (port2 >= lowest_port && port2 <= highest_port) {
-                            let now = chrono::Local::now();
-                            let very_long_address = key.address1.len() > 25 || key.address2.len() > 25;
-                            let mut info_traffic = info_traffic_mutex
-                                .lock()
-                                .expect("Error acquiring mutex\n\r");
-                            let len = info_traffic.map.len();
-                            let index = info_traffic.map.get_index_of(&key).unwrap_or(len);
-                            let country = if index == len {
-                                // first occurrence of key => retrieve country code
-                                get_country_code(traffic_type, &key, &country_db_reader)
-                            } else {
-                                // this key already occurred
-                                String::new()
-                            };
-                            let is_already_featured = info_traffic.favorites_last_interval.contains(&index);
-                            let mut update_favorites_featured = false;
-                            info_traffic
-                                .map
-                                .entry(key)
-                                .and_modify(|info| {
-                                    info.transmitted_bytes += exchanged_bytes;
-                                    info.transmitted_packets += 1;
-                                    info.final_timestamp = now;
-                                    if info.is_favorite && !is_already_featured {
-                                        update_favorites_featured = true;
-                                    }
-                                })
-                                .or_insert(InfoAddressPortPair {
-                                    transmitted_bytes: exchanged_bytes,
-                                    transmitted_packets: 1,
-                                    initial_timestamp: now,
-                                    final_timestamp: now,
-                                    app_protocol: application_protocol,
-                                    very_long_address,
-                                    traffic_type,
-                                    country,
-                                    index,
-                                    is_favorite: false,
-                                });
-                            info_traffic.addresses_last_interval.insert(index);
-                            if update_favorites_featured {
-                                info_traffic.favorites_last_interval.insert(index);
-                            }
+                            fun_name(key, info_traffic_mutex, &traffic_type, &country_db_reader, exchanged_bytes, application_protocol);
                             reported_packet = true;
                             // }
                         }
@@ -201,5 +159,51 @@ pub fn parse_packets_loop(
                 }
             }
         }
+    }
+}
+
+fn fun_name(key: AddressPortPair, info_traffic_mutex: &Arc<Mutex<InfoTraffic>>, traffic_type: &TrafficType, country_db_reader: &maxminddb::Reader<&[u8]>, exchanged_bytes: u128, application_protocol: AppProtocol) {
+    let now = chrono::Local::now();
+    let very_long_address = key.address1.len() > 25 || key.address2.len() > 25;
+    let mut info_traffic = info_traffic_mutex
+        .lock()
+        .expect("Error acquiring mutex\n\r");
+    let len = info_traffic.map.len();
+    let index = info_traffic.map.get_index_of(&key).unwrap_or(len);
+    let country = if index == len {
+        // first occurrence of key => retrieve country code
+        get_country_code(*traffic_type, &key, country_db_reader)
+    } else {
+        // this key already occurred
+        String::new()
+    };
+    let is_already_featured = info_traffic.favorites_last_interval.contains(&index);
+    let mut update_favorites_featured = false;
+    info_traffic
+        .map
+        .entry(key)
+        .and_modify(|info| {
+            info.transmitted_bytes += exchanged_bytes;
+            info.transmitted_packets += 1;
+            info.final_timestamp = now;
+            if info.is_favorite && !is_already_featured {
+                update_favorites_featured = true;
+            }
+        })
+        .or_insert(InfoAddressPortPair {
+            transmitted_bytes: exchanged_bytes,
+            transmitted_packets: 1,
+            initial_timestamp: now,
+            final_timestamp: now,
+            app_protocol: application_protocol,
+            very_long_address,
+            *traffic_type,
+            country,
+            index,
+            is_favorite: false,
+        });
+    info_traffic.addresses_last_interval.insert(index);
+    if update_favorites_featured {
+        info_traffic.favorites_last_interval.insert(index);
     }
 }

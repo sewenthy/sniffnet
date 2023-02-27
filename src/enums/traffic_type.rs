@@ -1,5 +1,5 @@
 /// Enum representing the possible traffic type (incoming, outgoing or multicast).
-#[derive(Clone, Copy, PartialEq, Eq)]
+#[derive(Clone, PartialEq, Eq)]
 pub enum TrafficType {
     /// Incoming traffic (from remote address to local interface)
     Incoming,
