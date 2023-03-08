@@ -126,7 +126,7 @@ pub fn parse_packets_loop(
                         {
                             // if (port1 >= lowest_port && port1 <= highest_port)
                             //     || (port2 >= lowest_port && port2 <= highest_port) {
-                            bar(info_traffic_mutex, exchanged_bytes, application_protocol, traffic_type, country_db_reader, key);
+                            bar____EXTRACT_THIS(info_traffic_mutex, exchanged_bytes, application_protocol, traffic_type, country_db_reader, key);
                             reported_packet = true;
                             // }
                         }
@@ -163,7 +163,7 @@ pub fn parse_packets_loop(
     }
 }
 
-fn bar(info_traffic_mutex: &Arc<Mutex<InfoTraffic>>, exchanged_bytes: u128, application_protocol: AppProtocol, traffic_type: TrafficType, country_db_reader: Reader<&[u8]>, key: AddressPortPair) {
+fn bar____EXTRACT_THIS(info_traffic_mutex: &Arc<Mutex<InfoTraffic>>, exchanged_bytes: u128, application_protocol: AppProtocol, traffic_type: TrafficType, country_db_reader: Reader<&[u8]>, key: AddressPortPair) {
     let now = chrono::Local::now();
     let very_long_address = key.address1.len() > 25 || key.address2.len() > 25;
     let mut info_traffic = info_traffic_mutex
