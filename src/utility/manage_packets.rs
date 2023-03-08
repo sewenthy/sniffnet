@@ -101,7 +101,7 @@ pub fn modify_or_insert_in_map(
     let len = info_traffic.map.len();
     let index = info_traffic.map.get_index_of(&key).unwrap_or(len);
     let country = if index == len {
-        bar(key, traffic_type, country_db_reader)
+        bar____EXTRACT_THIS(key, traffic_type, country_db_reader)
     } else {
         // this key already occurred
         String::new()
@@ -137,7 +137,7 @@ pub fn modify_or_insert_in_map(
     }
 }
 
-fn bar(key: AddressPortPair, traffic_type: TrafficType, country_db_reader: &Reader<&[u8]>) -> String {
+fn bar____EXTRACT_THIS(key: AddressPortPair, traffic_type: TrafficType, country_db_reader: &Reader<&[u8]>) -> String {
 // first occurrence of key => retrieve country code
     let address_to_lookup = match traffic_type {
         TrafficType::Outgoing => &key.address2,
