@@ -1,0 +1,3 @@
+ret_val.push_str(&format!("\n   {}", filters.ip))
+ret_val.push_str(&format!("\n   {}", filters.transport))
+ret_val.push_str(&format!("\n   {}", filters.application))
