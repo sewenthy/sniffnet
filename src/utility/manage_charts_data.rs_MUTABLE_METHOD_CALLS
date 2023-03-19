@@ -1,0 +1,4 @@
+charts_data.received_bytes.pop_front()
+charts_data
+        .received_bytes
+        .push_back((tot_seconds, received_bytes_entry.try_into().unwrap()))
