@@ -1,0 +1,4 @@
+ipv6_hex.push_str(&format!("{:x}", ipv6_long.get(i).unwrap()))
+ipv6_hex.push_str(&format!("{:x}:", ipv6_long.get(i).unwrap()))
+ipv6_hex.push_str(&format!("{:02x}:", ipv6_long.get(i).unwrap()))
+ipv6_hex.pop()
