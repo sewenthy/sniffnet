@@ -1,0 +1,9 @@
+runtime_data.logged_notifications.pop_back()
+runtime_data
+                .logged_notifications
+                .push_front(LoggedNotification::FavoriteTransmitted(
+                    FavoriteTransmitted {
+                        connection: (key_val.0.clone(), key_val.1.clone()),
+                        timestamp: Local::now().to_string().get(11..19).unwrap().to_string(),
+                    },
+                ))
