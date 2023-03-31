@@ -1,19 +1,15 @@
-use std::sync::{Arc, Mutex};
-
-use chrono::Local;
-use etherparse::{IpHeader, TransportHeader};
-use maxminddb::{geoip2, Reader};
-use pcap::{Active, Capture, Device};
-
 use crate::enums::app_protocol::from_port_to_application_protocol;
 use crate::enums::traffic_type::TrafficType;
 use crate::structs::address_port_pair::AddressPortPair;
 use crate::structs::info_address_port_pair::InfoAddressPortPair;
-
 use crate::{AppProtocol, InfoTraffic, IpVersion, TransProtocol};
-
-/// This function analyzes the network layer header passed as parameter and updates variables
-/// passed by reference on the basis of the packet header content.
+use chrono::Local;
+use etherparse::{IpHeader, TransportHeader};
+use maxminddb::{geoip2, Reader};
+use pcap::{Active, Capture, Device};
+use std::sync::{Arc, Mutex};
+#[doc = " This function analyzes the network layer header passed as parameter and updates variables"]
+#[doc = " passed by reference on the basis of the packet header content."]
 pub fn analyze_network_header(
     network_header: Option<IpHeader>,
     exchanged_bytes: &mut u128,
@@ -48,9 +44,8 @@ pub fn analyze_network_header(
         }
     }
 }
-
-/// This function analyzes the transport layer header passed as parameter and updates variables
-/// passed by reference on the basis of the packet header content.
+#[doc = " This function analyzes the transport layer header passed as parameter and updates variables"]
+#[doc = " passed by reference on the basis of the packet header content."]
 pub fn analyze_transport_header(
     transport_header: Option<TransportHeader>,
     port1: &mut u16,
@@ -83,8 +78,7 @@ pub fn analyze_transport_header(
         }
     }
 }
-
-/// Function to insert the source and destination of a packet into the shared map containing the analyzed traffic.
+#[doc = " Function to insert the source and destination of a packet into the shared map containing the analyzed traffic."]
 pub fn modify_or_insert_in_map(
     info_traffic_mutex: &Arc<Mutex<InfoTraffic>>,
     key: AddressPortPair,
@@ -101,9 +95,8 @@ pub fn modify_or_insert_in_map(
     let len = info_traffic.map.len();
     let index = info_traffic.map.get_index_of(&key).unwrap_or(len);
     let country = if index == len {
-        bar____EXTRACT_THIS(key, traffic_type, country_db_reader)
+        bar(&key, &traffic_type, country_db_reader)
     } else {
-        // this key already occurred
         String::new()
     };
     let is_already_featured = info_traffic.favorites_last_interval.contains(&index);
@@ -136,14 +129,15 @@ pub fn modify_or_insert_in_map(
         info_traffic.favorites_last_interval.insert(index);
     }
 }
-
-fn bar____EXTRACT_THIS(key: AddressPortPair, traffic_type: TrafficType, country_db_reader: &Reader<&[u8]>) -> String {
-// first occurrence of key => retrieve country code
-    let address_to_lookup = match traffic_type {
-        TrafficType::Outgoing => &key.address2,
-        _ => &key.address1,
+fn bar(
+    key: &AddressPortPair,
+    traffic_type: &TrafficType,
+    country_db_reader: &Reader<&[u8]>,
+) -> String {
+    let address_to_lookup = match (*traffic_type) {
+        TrafficType::Outgoing => &(*key).address2,
+        _ => &(*key).address1,
     };
-
     let country_result: Result<geoip2::Country, maxminddb::MaxMindDBError> =
         country_db_reader.lookup(address_to_lookup.parse().unwrap());
     let mut result = String::new();
@@ -156,21 +150,18 @@ fn bar____EXTRACT_THIS(key: AddressPortPair, traffic_type: TrafficType, country_
     }
     result
 }
-
-/// Determines if the input address is a multicast address or not.
-///
-/// # Arguments
-///
-/// * `address` - string representing an IPv4 or IPv6 network address.
+#[doc = " Determines if the input address is a multicast address or not."]
+#[doc = ""]
+#[doc = " # Arguments"]
+#[doc = ""]
+#[doc = " * `address` - string representing an IPv4 or IPv6 network address."]
 pub fn is_multicast_address(address: &str) -> bool {
     let mut ret_val = false;
     if address.contains(':') {
-        //IPv6 address
         if address.starts_with("ff") {
             ret_val = true;
         }
     } else {
-        //IPv4 address
         let first_group = address
             .split('.')
             .next()
@@ -184,16 +175,14 @@ pub fn is_multicast_address(address: &str) -> bool {
     }
     ret_val
 }
-
-/// Determines if the input address is a broadcast address or not.
-///
-/// # Arguments
-///
-/// * `address` - string representing an IPv4 or IPv6 network address.
+#[doc = " Determines if the input address is a broadcast address or not."]
+#[doc = ""]
+#[doc = " # Arguments"]
+#[doc = ""]
+#[doc = " * `address` - string representing an IPv4 or IPv6 network address."]
 pub fn is_broadcast_address(address: &str) -> bool {
     let mut ret_val = false;
     if !address.contains(':') {
-        //IPv4 address
         let groups: Vec<u8> = address
             .split('.')
             .map(|str| str.parse::<u8>().unwrap())
@@ -205,18 +194,16 @@ pub fn is_broadcast_address(address: &str) -> bool {
         {
             ret_val = true;
         }
-        // still missing a check for directed broadcast!
     }
     ret_val
 }
-
-/// Determines if the capture opening resolves into an Error
+#[doc = " Determines if the capture opening resolves into an Error"]
 pub fn get_capture_result(device: &Device) -> (Option<String>, Option<Capture<Active>>) {
     let cap_result = Capture::from_device(&*device.name)
         .expect("Capture initialization error\n\r")
         .promisc(true)
-        .snaplen(256) //limit stored packets slice dimension (to keep more in the buffer)
-        .immediate_mode(true) //parse packets ASAP!
+        .snaplen(256)
+        .immediate_mode(true)
         .open();
     if cap_result.is_err() {
         let err_string = cap_result.err().unwrap().to_string();
@@ -225,45 +212,37 @@ pub fn get_capture_result(device: &Device) -> (Option<String>, Option<Capture<Ac
         (None, cap_result.ok())
     }
 }
-
-// Test for this function at the end of this file (run with cargo test)
-/// Function to convert a long decimal ipv6 address to a
-/// shorter compressed ipv6 address
-///
-/// # Arguments
-///
-/// * `ipv6_long` - Contains the 16 integer composing the not compressed decimal ipv6 address
-///
-/// # Example
-///
-/// ```
-/// let result = ipv6_from_long_dec_to_short_hex([255,10,10,255,0,0,0,0,28,4,4,28,255,1,0,0]);
-/// assert_eq!(result, "ff0a:aff::1c04:41c:ff01:0".to_string());
-/// ```
+#[doc = " Function to convert a long decimal ipv6 address to a"]
+#[doc = " shorter compressed ipv6 address"]
+#[doc = ""]
+#[doc = " # Arguments"]
+#[doc = ""]
+#[doc = " * `ipv6_long` - Contains the 16 integer composing the not compressed decimal ipv6 address"]
+#[doc = ""]
+#[doc = " # Example"]
+#[doc = ""]
+#[doc = " ```"]
+#[doc = " let result = ipv6_from_long_dec_to_short_hex([255,10,10,255,0,0,0,0,28,4,4,28,255,1,0,0]);"]
+#[doc = " assert_eq!(result, \"ff0a:aff::1c04:41c:ff01:0\".to_string());"]
+#[doc = " ```"]
 pub fn ipv6_from_long_dec_to_short_hex(ipv6_long: [u8; 16]) -> String {
-    //from hex to dec, paying attention to the correct number of digits
     let mut ipv6_hex = String::new();
     for i in 0..=15 {
-        //even: first byte of the group
         if i % 2 == 0 {
             if *ipv6_long.get(i).unwrap() == 0 {
                 continue;
             }
             ipv6_hex.push_str(&format!("{:x}", ipv6_long.get(i).unwrap()));
-        }
-        //odd: second byte of the group
-        else if *ipv6_long.get(i - 1).unwrap() == 0 {
+        } else if *ipv6_long.get(i - 1).unwrap() == 0 {
             ipv6_hex.push_str(&format!("{:x}:", ipv6_long.get(i).unwrap()));
         } else {
             ipv6_hex.push_str(&format!("{:02x}:", ipv6_long.get(i).unwrap()));
         }
     }
     ipv6_hex.pop();
-
-    // search for the longest zero sequence in the ipv6 address
     let mut to_compress: Vec<&str> = ipv6_hex.split(':').collect();
-    let mut longest_zero_sequence = 0; // max number of consecutive zeros
-    let mut longest_zero_sequence_start = 0; // first index of the longest sequence of zeros
+    let mut longest_zero_sequence = 0;
+    let mut longest_zero_sequence_start = 0;
     let mut current_zero_sequence = 0;
     let mut current_zero_sequence_start = 0;
     let mut i = 0;
@@ -283,18 +262,14 @@ pub fn ipv6_from_long_dec_to_short_hex(ipv6_long: [u8; 16]) -> String {
         i += 1;
     }
     if current_zero_sequence != 0 {
-        // to catch consecutive zeros at the end
         if current_zero_sequence > longest_zero_sequence {
             longest_zero_sequence = current_zero_sequence;
             longest_zero_sequence_start = current_zero_sequence_start;
         }
     }
     if longest_zero_sequence < 2 {
-        // no compression needed
         return ipv6_hex;
     }
-
-    //from longest sequence of consecutive zeros to '::'
     let mut ipv6_hex_compressed = String::new();
     for _ in 0..longest_zero_sequence {
         to_compress.remove(longest_zero_sequence_start);
@@ -315,14 +290,11 @@ pub fn ipv6_from_long_dec_to_short_hex(ipv6_long: [u8; 16]) -> String {
         return ipv6_hex_compressed;
     }
     ipv6_hex_compressed.pop();
-
     ipv6_hex_compressed
 }
-
 #[cfg(test)]
 mod test {
     use crate::utility::manage_packets::ipv6_from_long_dec_to_short_hex;
-
     #[test]
     fn ipv6_simple_test() {
         let result = ipv6_from_long_dec_to_short_hex([
@@ -330,7 +302,6 @@ mod test {
         ]);
         assert_eq!(result, "ff0a:aff:ff0a:aff:ff0a:aff:ff0a:aff".to_string());
     }
-
     #[test]
     fn ipv6_zeros_in_the_middle() {
         let result = ipv6_from_long_dec_to_short_hex([
@@ -338,84 +309,72 @@ mod test {
         ]);
         assert_eq!(result, "ff0a:aff::1c04:41c:ff01:0".to_string());
     }
-
     #[test]
     fn ipv6_leading_zeros() {
         let result =
             ipv6_from_long_dec_to_short_hex([0, 0, 0, 0, 0, 0, 0, 0, 28, 4, 4, 28, 255, 1, 0, 10]);
         assert_eq!(result, "::1c04:41c:ff01:a".to_string());
     }
-
     #[test]
     fn ipv6_tail_one_after_zeros() {
         let result =
             ipv6_from_long_dec_to_short_hex([28, 4, 4, 28, 255, 1, 0, 10, 0, 0, 0, 0, 0, 0, 0, 1]);
         assert_eq!(result, "1c04:41c:ff01:a::1".to_string());
     }
-
     #[test]
     fn ipv6_tail_zeros() {
         let result =
             ipv6_from_long_dec_to_short_hex([28, 4, 4, 28, 255, 1, 0, 10, 0, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(result, "1c04:41c:ff01:a::".to_string());
     }
-
     #[test]
     fn ipv6_multiple_zero_sequences_first_longer() {
         let result =
             ipv6_from_long_dec_to_short_hex([32, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1]);
         assert_eq!(result, "2000::101:0:0:1".to_string());
     }
-
     #[test]
     fn ipv6_multiple_zero_sequences_first_longer_head() {
         let result =
             ipv6_from_long_dec_to_short_hex([0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 0, 0, 0, 0, 0, 1]);
         assert_eq!(result, "::101:0:0:1".to_string());
     }
-
     #[test]
     fn ipv6_multiple_zero_sequences_second_longer() {
         let result =
             ipv6_from_long_dec_to_short_hex([1, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 3, 118]);
         assert_eq!(result, "100:0:0:1::376".to_string());
     }
-
     #[test]
     fn ipv6_multiple_zero_sequences_second_longer_tail() {
         let result =
             ipv6_from_long_dec_to_short_hex([32, 0, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 0]);
         assert_eq!(result, "2000:0:0:1:101::".to_string());
     }
-
     #[test]
     fn ipv6_multiple_zero_sequences_equal_length() {
         let result =
             ipv6_from_long_dec_to_short_hex([118, 3, 0, 0, 0, 0, 0, 1, 1, 1, 0, 0, 0, 0, 0, 1]);
         assert_eq!(result, "7603::1:101:0:0:1".to_string());
     }
-
     #[test]
     fn ipv6_all_zeros() {
         let result =
             ipv6_from_long_dec_to_short_hex([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(result, "::".to_string());
     }
-
     #[test]
     fn ipv6_x_all_zeros() {
         let result =
             ipv6_from_long_dec_to_short_hex([161, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]);
         assert_eq!(result, "a100::".to_string());
     }
-
     #[test]
     fn ipv6_all_zeros_x() {
         let result =
             ipv6_from_long_dec_to_short_hex([0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 176]);
         assert_eq!(result, "::b0".to_string());
     }
-
     #[test]
     fn ipv6_many_zeros_but_no_compression() {
         let result =
