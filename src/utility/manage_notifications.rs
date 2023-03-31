@@ -77,29 +77,33 @@ pub fn notify_and_log(
         && !runtime_data.favorites_last_interval.is_empty()
     {
         let info_traffic_lock = info_traffic.lock().unwrap();
-        for index in &runtime_data.favorites_last_interval.clone() {
-            //log this notification
-            if runtime_data.logged_notifications.len() >= 30 {
-                runtime_data.logged_notifications.pop_back();
-            }
-            let key_val = info_traffic_lock.map.get_index(*index).unwrap();
-            runtime_data
-                .logged_notifications
-                .push_front(LoggedNotification::FavoriteTransmitted(
-                    FavoriteTransmitted {
-                        connection: (key_val.0.clone(), key_val.1.clone()),
-                        timestamp: Local::now().to_string().get(11..19).unwrap().to_string(),
-                    },
-                ));
-            if !already_emitted_sound && notifications.favorite_notification.sound.ne(&Sound::None)
-            {
-                // emit sound
-                play(
-                    notifications.favorite_notification.sound,
-                    notifications.volume,
-                );
-                already_emitted_sound = true;
-            }
+        fun_name(runtime_data, info_traffic_lock, already_emitted_sound, notifications);
+    }
+}
+
+fn fun_name(mut runtime_data: RefMut<RunTimeData>, info_traffic_lock: std::sync::MutexGuard<InfoTraffic>, mut already_emitted_sound: bool, notifications: Notifications) {
+    for index in &runtime_data.favorites_last_interval.clone() {
+        //log this notification
+        if runtime_data.logged_notifications.len() >= 30 {
+            runtime_data.logged_notifications.pop_back();
+        }
+        let key_val = info_traffic_lock.map.get_index(*index).unwrap();
+        runtime_data
+            .logged_notifications
+            .push_front(LoggedNotification::FavoriteTransmitted(
+                FavoriteTransmitted {
+                    connection: (key_val.0.clone(), key_val.1.clone()),
+                    timestamp: Local::now().to_string().get(11..19).unwrap().to_string(),
+                },
+            ));
+        if !already_emitted_sound && notifications.favorite_notification.sound.ne(&Sound::None)
+        {
+            // emit sound
+            play(
+                notifications.favorite_notification.sound,
+                notifications.volume,
+            );
+            already_emitted_sound = true;
         }
     }
 }
