@@ -7,14 +7,12 @@ use crate::{InfoTraffic, RunTimeData};
 use chrono::Local;
 use std::cell::RefMut;
 use std::sync::{Arc, Mutex, MutexGuard};
-
 pub fn notify_and_log(
     mut runtime_data: RefMut<RunTimeData>,
     notifications: Notifications,
     info_traffic: &Arc<Mutex<InfoTraffic>>,
 ) {
     let mut already_emitted_sound = false;
-    // packets threshold
     if notifications.packets_notification.threshold.is_some() {
         let sent_packets_entry = runtime_data.tot_sent_packets - runtime_data.tot_sent_packets_prev;
         let received_packets_entry =
@@ -22,7 +20,6 @@ pub fn notify_and_log(
         if received_packets_entry + sent_packets_entry
             > u128::from(notifications.packets_notification.threshold.unwrap())
         {
-            // log this notification
             if runtime_data.logged_notifications.len() >= 30 {
                 runtime_data.logged_notifications.pop_back();
             }
@@ -35,7 +32,6 @@ pub fn notify_and_log(
                 }),
             );
             if notifications.packets_notification.sound.ne(&Sound::None) {
-                // emit sound
                 play(
                     notifications.packets_notification.sound,
                     notifications.volume,
@@ -44,7 +40,6 @@ pub fn notify_and_log(
             }
         }
     }
-    // bytes threshold
     if notifications.bytes_notification.threshold.is_some() {
         let sent_bytes_entry = runtime_data.tot_sent_bytes - runtime_data.tot_sent_bytes_prev;
         let received_bytes_entry =
@@ -52,7 +47,6 @@ pub fn notify_and_log(
         if received_bytes_entry + sent_bytes_entry
             > u128::from(notifications.bytes_notification.threshold.unwrap())
         {
-            //log this notification
             if runtime_data.logged_notifications.len() >= 30 {
                 runtime_data.logged_notifications.pop_back();
             }
@@ -66,29 +60,35 @@ pub fn notify_and_log(
                 }),
             );
             if !already_emitted_sound && notifications.bytes_notification.sound.ne(&Sound::None) {
-                // emit sound
                 play(notifications.bytes_notification.sound, notifications.volume);
                 already_emitted_sound = true;
             }
         }
     }
-    // from favorites
     if notifications.favorite_notification.notify_on_favorite
         && !runtime_data.favorites_last_interval.is_empty()
     {
         let info_traffic_lock = info_traffic.lock().unwrap();
-        bar____EXTRACT_THIS(runtime_data, notifications, already_emitted_sound, info_traffic_lock)
+        bar(
+            &mut runtime_data,
+            notifications,
+            &mut already_emitted_sound,
+            info_traffic_lock,
+        )
     }
 }
-
-fn bar____EXTRACT_THIS(runtime_data: RefMut<'b, RunTimeData>, notifications: Notifications, already_emitted_sound: bool, info_traffic_lock: MutexGuard<'_, InfoTraffic>) {
-    for index in &runtime_data.favorites_last_interval.clone() {
-        //log this notification
-        if runtime_data.logged_notifications.len() >= 30 {
-            runtime_data.logged_notifications.pop_back();
+fn bar(
+    runtime_data: &mut RefMut<'_, RunTimeData>,
+    notifications: Notifications,
+    already_emitted_sound: &mut bool,
+    info_traffic_lock: MutexGuard<'_, InfoTraffic>,
+) {
+    for index in &(*runtime_data).favorites_last_interval.clone() {
+        if (*runtime_data).logged_notifications.len() >= 30 {
+            (*runtime_data).logged_notifications.pop_back();
         }
         let key_val = info_traffic_lock.map.get_index(*index).unwrap();
-        runtime_data
+        (*runtime_data)
             .logged_notifications
             .push_front(LoggedNotification::FavoriteTransmitted(
                 FavoriteTransmitted {
@@ -96,14 +96,12 @@ fn bar____EXTRACT_THIS(runtime_data: RefMut<'b, RunTimeData>, notifications: Not
                     timestamp: Local::now().to_string().get(11..19).unwrap().to_string(),
                 },
             ));
-        if !already_emitted_sound && notifications.favorite_notification.sound.ne(&Sound::None)
-        {
-            // emit sound
+        if !(*already_emitted_sound) && notifications.favorite_notification.sound.ne(&Sound::None) {
             play(
                 notifications.favorite_notification.sound,
                 notifications.volume,
             );
-            already_emitted_sound = true;
+            (*already_emitted_sound) = true;
         }
     }
 }
