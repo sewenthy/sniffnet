@@ -38,18 +38,22 @@ pub fn get_active_filters_string(filters: &Filters, language: Language) -> Strin
             none_translation(language)
         )
     } else {
-        let mut ret_val = active_filters_translation(language).to_string();
-        if filters.ip.ne(&IpVersion::Other) {
-            ret_val.push_str(&format!("\n   {}", filters.ip));
-        }
-        if filters.transport.ne(&TransProtocol::Other) {
-            ret_val.push_str(&format!("\n   {}", filters.transport));
-        }
-        if filters.application.ne(&AppProtocol::Other) {
-            ret_val.push_str(&format!("\n   {}", filters.application));
-        }
-        ret_val
+        bar(&filters, language)
     }
+}
+
+fn bar(filters: &&Filters, language: Language) -> String {
+    let mut ret_val = active_filters_translation(language).to_string();
+    if filters.ip.ne(&IpVersion::Other) {
+        ret_val.push_str(&format!("\n   {}", filters.ip));
+    }
+    if filters.transport.ne(&TransProtocol::Other) {
+        ret_val.push_str(&format!("\n   {}", filters.transport));
+    }
+    if filters.application.ne(&AppProtocol::Other) {
+        ret_val.push_str(&format!("\n   {}", filters.application));
+    }
+    ret_val
 }
 
 /// Computes the String representing the active filters, without line breaks
