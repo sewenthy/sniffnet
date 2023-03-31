@@ -61,13 +61,7 @@ pub fn analyze_transport_header(
 ) {
     match transport_header {
         Some(TransportHeader::Udp(udp_header)) => {
-            *port1 = udp_header.source_port;
-            *port2 = udp_header.destination_port;
-            *transport_protocol = TransProtocol::UDP;
-            *application_protocol = from_port_to_application_protocol(*port1);
-            if (*application_protocol).eq(&AppProtocol::Other) {
-                *application_protocol = from_port_to_application_protocol(*port2);
-            }
+            fun_name(port1, udp_header, port2, transport_protocol, application_protocol);
         }
         Some(TransportHeader::Tcp(tcp_header)) => {
             *port1 = tcp_header.source_port;
@@ -81,6 +75,16 @@ pub fn analyze_transport_header(
         _ => {
             *skip_packet = true;
         }
+    }
+}
+
+fn fun_name(port1: &mut u16, udp_header: etherparse::UdpHeader, port2: &mut u16, transport_protocol: &mut TransProtocol, application_protocol: &mut AppProtocol) {
+    *port1 = udp_header.source_port;
+    *port2 = udp_header.destination_port;
+    *transport_protocol = TransProtocol::UDP;
+    *application_protocol = from_port_to_application_protocol(*port1);
+    if (*application_protocol).eq(&AppProtocol::Other) {
+        *application_protocol = from_port_to_application_protocol(*port2);
     }
 }
 
