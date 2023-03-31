@@ -175,20 +175,24 @@ pub fn is_broadcast_address(address: &str) -> bool {
     let mut ret_val = false;
     if !address.contains(':') {
         //IPv4 address
-        let groups: Vec<u8> = address
-            .split('.')
-            .map(|str| str.parse::<u8>().unwrap())
-            .collect();
-        if *groups.first().unwrap() == 255
-            && *groups.get(1).unwrap() == 255
-            && *groups.get(2).unwrap() == 255
-            && *groups.get(3).unwrap() == 255
-        {
-            ret_val = true;
-        }
+        fun_name(address, &mut ret_val);
         // still missing a check for directed broadcast!
     }
     ret_val
+}
+
+fn fun_name(address: &str, ret_val: &mut bool) {
+    let groups: Vec<u8> = address
+        .split('.')
+        .map(|str| str.parse::<u8>().unwrap())
+        .collect();
+    if *groups.first().unwrap() == 255
+        && *groups.get(1).unwrap() == 255
+        && *groups.get(2).unwrap() == 255
+        && *groups.get(3).unwrap() == 255
+    {
+        *ret_val = true;
+    }
 }
 
 /// Determines if the capture opening resolves into an Error
