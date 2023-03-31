@@ -27,14 +27,7 @@ pub fn update_charts_data(mut charts_data: RefMut<RunTimeData>) {
     charts_data.min_sent_bytes = get_min(&charts_data.sent_bytes.clone());
     charts_data.tot_sent_bytes_prev = charts_data.tot_sent_bytes;
     // update received bytes traffic data
-    if charts_data.received_bytes.len() >= 30 {
-        charts_data.received_bytes.pop_front();
-    }
-    charts_data
-        .received_bytes
-        .push_back((tot_seconds, received_bytes_entry.try_into().unwrap()));
-    charts_data.max_received_bytes = get_max(&charts_data.received_bytes.clone());
-    charts_data.tot_received_bytes_prev = charts_data.tot_received_bytes;
+    fun_name(&mut charts_data, tot_seconds, received_bytes_entry);
 
     // update sent packets traffic data
     if charts_data.sent_packets.len() >= 30 {
@@ -55,6 +48,17 @@ pub fn update_charts_data(mut charts_data: RefMut<RunTimeData>) {
         .push_back((tot_seconds, received_packets_entry.try_into().unwrap()));
     charts_data.max_received_packets = get_max(&charts_data.received_packets.clone());
     charts_data.tot_received_packets_prev = charts_data.tot_received_packets;
+}
+
+fn fun_name(charts_data: &mut RefMut<RunTimeData>, tot_seconds: u32, received_bytes_entry: u128) {
+    if charts_data.received_bytes.len() >= 30 {
+        charts_data.received_bytes.pop_front();
+    }
+    charts_data
+        .received_bytes
+        .push_back((tot_seconds, received_bytes_entry.try_into().unwrap()));
+    charts_data.max_received_bytes = get_max(&charts_data.received_bytes.clone());
+    charts_data.tot_received_bytes_prev = charts_data.tot_received_bytes;
 }
 
 /// Finds the minimum y value to be displayed in charts
