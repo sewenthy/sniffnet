@@ -1,7 +1,7 @@
 use std::sync::{Arc, Mutex};
 
 use chrono::Local;
-use etherparse::{IpHeader, TransportHeader};
+use etherparse::{IpHeader, TransportHeader, UdpHeader};
 use maxminddb::Reader;
 use pcap::{Active, Capture, Device};
 
@@ -61,13 +61,7 @@ pub fn analyze_transport_header(
 ) {
     match transport_header {
         Some(TransportHeader::Udp(udp_header)) => {
-            *port1 = udp_header.source_port;
-            *port2 = udp_header.destination_port;
-            *transport_protocol = TransProtocol::UDP;
-            *application_protocol = from_port_to_application_protocol(*port1);
-            if (*application_protocol).eq(&AppProtocol::Other) {
-                *application_protocol = from_port_to_application_protocol(*port2);
-            }
+            bar(port1, port2, application_protocol, transport_protocol, udp_header)
         }
         Some(TransportHeader::Tcp(tcp_header)) => {
             *port1 = tcp_header.source_port;
@@ -81,6 +75,16 @@ pub fn analyze_transport_header(
         _ => {
             *skip_packet = true;
         }
+    }
+}
+
+fn bar(port1: &mut u16, port2: &mut u16, application_protocol: &mut AppProtocol, transport_protocol: &mut TransProtocol, udp_header: UdpHeader) {
+    *port1 = udp_header.source_port;
+    *port2 = udp_header.destination_port;
+    *transport_protocol = TransProtocol::UDP;
+    *application_protocol = from_port_to_application_protocol(*port1);
+    if (*application_protocol).eq(&AppProtocol::Other) {
+        *application_protocol = from_port_to_application_protocol(*port2);
     }
 }
 
