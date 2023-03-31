@@ -102,22 +102,8 @@ pub fn modify_or_insert_in_map(
     let index = info_traffic.map.get_index_of(&key).unwrap_or(len);
     let country = if index == len {
         // first occurrence of key => retrieve country code
-        let address_to_lookup = match traffic_type {
-            TrafficType::Outgoing => &key.address2,
-            _ => &key.address1,
-        };
 
-        let country_result: Result<geoip2::Country, maxminddb::MaxMindDBError> =
-            country_db_reader.lookup(address_to_lookup.parse().unwrap());
-        let mut result = String::new();
-        if let Ok(res1) = country_result {
-            if let Some(res2) = res1.country {
-                if let Some(res3) = res2.iso_code {
-                    result = res3.to_string().replace("ZZ", "//");
-                }
-            }
-        }
-        result
+        bar(&key, traffic_type, country_db_reader)
     } else {
         // this key already occurred
         String::new()
@@ -151,6 +137,25 @@ pub fn modify_or_insert_in_map(
     if update_favorites_featured {
         info_traffic.favorites_last_interval.insert(index);
     }
+}
+
+fn bar(key: &AddressPortPair, traffic_type: TrafficType, country_db_reader: &Reader<&[u8]>) -> String {
+    let address_to_lookup = match traffic_type {
+        TrafficType::Outgoing => &key.address2,
+        _ => &key.address1,
+    };
+
+    let country_result: Result<geoip2::Country, maxminddb::MaxMindDBError> =
+        country_db_reader.lookup(address_to_lookup.parse().unwrap());
+    let mut result = String::new();
+    if let Ok(res1) = country_result {
+        if let Some(res2) = res1.country {
+            if let Some(res3) = res2.iso_code {
+                result = res3.to_string().replace("ZZ", "//");
+            }
+        }
+    }
+    result
 }
 
 /// Determines if the input address is a multicast address or not.
