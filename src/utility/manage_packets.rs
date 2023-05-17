@@ -223,6 +223,7 @@ pub fn get_capture_result(device: &Device) -> (Option<String>, Option<Capture<Ac
 /// ```
 pub fn ipv6_from_long_dec_to_short_hex(ipv6_long: [u8; 16]) -> String {
     //from hex to dec, paying attention to the correct number of digits
+    /* START SELECTION */
     let mut ipv6_hex = String::new();
     for i in 0..=15 {
         //even: first byte of the group
@@ -240,6 +241,7 @@ pub fn ipv6_from_long_dec_to_short_hex(ipv6_long: [u8; 16]) -> String {
         }
     }
     ipv6_hex.pop();
+    /* END SELECTION */
 
     // search for the longest zero sequence in the ipv6 address
     let mut to_compress: Vec<&str> = ipv6_hex.split(':').collect();
