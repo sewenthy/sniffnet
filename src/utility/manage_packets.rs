@@ -175,6 +175,7 @@ pub fn is_broadcast_address(address: &str) -> bool {
     let mut ret_val = false;
     if !address.contains(':') {
         //IPv4 address
+        /* START SELECTION */
         let groups: Vec<u8> = address
             .split('.')
             .map(|str| str.parse::<u8>().unwrap())
@@ -186,6 +187,7 @@ pub fn is_broadcast_address(address: &str) -> bool {
         {
             ret_val = true;
         }
+        /* END SELECTION */
         // still missing a check for directed broadcast!
     }
     ret_val
