@@ -77,6 +77,7 @@ pub fn notify_and_log(
         && !runtime_data.favorites_last_interval.is_empty()
     {
         let info_traffic_lock = info_traffic.lock().unwrap();
+        /* START SELECTION */
         for index in &runtime_data.favorites_last_interval.clone() {
             //log this notification
             if runtime_data.logged_notifications.len() >= 30 {
@@ -101,5 +102,6 @@ pub fn notify_and_log(
                 already_emitted_sound = true;
             }
         }
+        /* END SELECTION */
     }
 }
