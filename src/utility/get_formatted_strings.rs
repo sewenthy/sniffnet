@@ -104,6 +104,7 @@ pub fn get_app_count_string(app_count: &HashMap<AppProtocol, u128>, tot_packets:
     });
 
     //compute the length of the longest packet count string, used to align text
+    /* START SELECTION */
     let mut longest_num = sorted_app_count
         .get(0)
         .unwrap()
@@ -118,6 +119,7 @@ pub fn get_app_count_string(app_count: &HashMap<AppProtocol, u128>, tot_packets:
             }
         }
     }
+    /* END SELECTION */
 
     for entry in sorted_app_count {
         let app_proto_string = format!("{:?}", entry.0);
