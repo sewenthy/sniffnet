@@ -27,6 +27,7 @@ pub fn update_charts_data(mut charts_data: RefMut<RunTimeData>) {
     charts_data.min_sent_bytes = get_min(&charts_data.sent_bytes.clone());
     charts_data.tot_sent_bytes_prev = charts_data.tot_sent_bytes;
     // update received bytes traffic data
+    /* START SELECTION */
     if charts_data.received_bytes.len() >= 30 {
         charts_data.received_bytes.pop_front();
     }
@@ -35,6 +36,7 @@ pub fn update_charts_data(mut charts_data: RefMut<RunTimeData>) {
         .push_back((tot_seconds, received_bytes_entry.try_into().unwrap()));
     charts_data.max_received_bytes = get_max(&charts_data.received_bytes.clone());
     charts_data.tot_received_bytes_prev = charts_data.tot_received_bytes;
+    /* END SELECTION */
 
     // update sent packets traffic data
     if charts_data.sent_packets.len() >= 30 {
