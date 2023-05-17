@@ -102,6 +102,7 @@ pub fn modify_or_insert_in_map(
     let index = info_traffic.map.get_index_of(&key).unwrap_or(len);
     let country = if index == len {
         // first occurrence of key => retrieve country code
+        /* START SELECTION */
         let address_to_lookup = match traffic_type {
             TrafficType::Outgoing => &key.address2,
             _ => &key.address1,
@@ -118,6 +119,7 @@ pub fn modify_or_insert_in_map(
             }
         }
         result
+        /* END SELECTION */
     } else {
         // this key already occurred
         String::new()
