@@ -38,6 +38,7 @@ pub fn get_active_filters_string(filters: &Filters, language: Language) -> Strin
             none_translation(language)
         )
     } else {
+        /* START SELECTION */
         let mut ret_val = active_filters_translation(language).to_string();
         if filters.ip.ne(&IpVersion::Other) {
             ret_val.push_str(&format!("\n   {}", filters.ip));
@@ -49,6 +50,7 @@ pub fn get_active_filters_string(filters: &Filters, language: Language) -> Strin
             ret_val.push_str(&format!("\n   {}", filters.application));
         }
         ret_val
+        /* END SELECTION */
     }
 }
 
