@@ -5,6 +5,7 @@ use std::sync::{Arc, Mutex};
 
 use etherparse::PacketHeaders;
 use pcap::{Active, Capture, Device};
+use maxminddb::Reader;
 
 use crate::enums::traffic_type::TrafficType;
 use crate::structs::address_port_pair::AddressPortPair;
@@ -125,6 +126,8 @@ pub fn parse_packets_loop(
                         {
                             // if (port1 >= lowest_port && port1 <= highest_port)
                             //     || (port2 >= lowest_port && port2 <= highest_port) {
+                            /* START SELECTION */
+                            /* this is expected to fail because of struct punning */
                             let now = chrono::Local::now();
                             let very_long_address = key.address1.len() > 25 || key.address2.len() > 25;
                             let mut info_traffic = info_traffic_mutex
@@ -159,7 +162,7 @@ pub fn parse_packets_loop(
                                     final_timestamp: now,
                                     app_protocol: application_protocol,
                                     very_long_address,
-                                    traffic_type,
+                                    traffic_type, /* punning occurs here */
                                     country,
                                     index,
                                     is_favorite: false,
@@ -168,6 +171,7 @@ pub fn parse_packets_loop(
                             if update_favorites_featured {
                                 info_traffic.favorites_last_interval.insert(index);
                             }
+                            /* END SELECTION */
                             reported_packet = true;
                             // }
                         }
