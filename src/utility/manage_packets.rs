@@ -61,6 +61,7 @@ pub fn analyze_transport_header(
 ) {
     match transport_header {
         Some(TransportHeader::Udp(udp_header)) => {
+            /* START SELECTION */
             *port1 = udp_header.source_port;
             *port2 = udp_header.destination_port;
             *transport_protocol = TransProtocol::UDP;
@@ -68,6 +69,7 @@ pub fn analyze_transport_header(
             if (*application_protocol).eq(&AppProtocol::Other) {
                 *application_protocol = from_port_to_application_protocol(*port2);
             }
+            /* END SELECTION */
         }
         Some(TransportHeader::Tcp(tcp_header)) => {
             *port1 = tcp_header.source_port;
